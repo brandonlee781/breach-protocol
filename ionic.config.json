@@ -1,0 +1,7 @@
+{
+  "name": "breach",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "vue"
+}
