@@ -92,19 +92,32 @@ export const findPatterns = (
   return allFound;
 }
 
-const getMatrix = () => [
-  [0, 1, 2, 0, 0, 0],
-  [2, 2, 0, 0, 3, 0],
-  [0, 0, 3, 0, 0, 0],
-  [2, 3, 3, 1, 0, 0],
-  [3, 2, 0, 3, 3, 0],
-  [0, 0, 0, 0, 0, 0],
-];
-const getSequences = () => [
-  [3, 2],
-  [2, 1, 0],
-  [0, 0, 3],
-]
+const randomElement = () => Math.floor(Math.random() * 6)
+
+const getMatrix = () => {
+  const matrix: number[][] = [];
+  for (let i = 0; i < 6; i++) {
+    const row: number[] = [];
+    for (let j = 0; j < 6; j++) {
+      row.push(randomElement());
+    }
+    matrix.push(row);
+  }
+  return matrix;
+};
+const getSequences = () => {
+  const sequences = [];
+  for (let i = 0; i < 3; i++) {
+    const randLength = Math.floor(Math.random() * (4 - 2 + 1)) + 2;
+    const row = Array.from({ length: randLength }, () => randomElement());
+    
+    sequences.push(row);
+  }
+  return sequences;
+  // [[3, 2],
+  // [2, 1, 0],
+  // [0, 0, 3]]
+}
 
 const matrix = ref<number[][]>([]);
 const flatMatrix = computed(() => flattenMatrix(matrix.value));
