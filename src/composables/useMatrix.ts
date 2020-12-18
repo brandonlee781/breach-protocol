@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, Ref, ref, watch } from 'vue';
 
 interface PatternElement {
   row: number;
@@ -34,12 +34,12 @@ const flattenMatrix = (pMatrix: number[][]): FindPatternElement[] => {
 // Find all possible next matching elements in the pattern
 const findNextElements = (curr: number, prev: FindPatternElement | undefined) => {
   if (!prev) return flatMatrix.value.filter(m => m.val === curr);
-  // if (prev.dir === Directions.X) {
-  //   return flatMatrix.value.filter(m => m.val === curr && m.col === prev.col);
-  // } 
-  // if (prev.dir === Directions.Y) {
-  //   return flatMatrix.value.filter(m => m.val === curr && m.row === prev.row);
-  // }
+  if (prev.dir === Directions.X) {
+    return flatMatrix.value.filter(m => m.val === curr && m.col === prev.col);
+  } 
+  if (prev.dir === Directions.Y) {
+    return flatMatrix.value.filter(m => m.val === curr && m.row === prev.row);
+  }
   return flatMatrix.value.filter(m =>
     m.val === curr &&
     (m.row === prev.row || m.col === prev.col)
@@ -94,11 +94,11 @@ export const findPatterns = (
 
 const randomElement = () => Math.floor(Math.random() * 6)
 
-const getMatrix = () => {
+const getMatrix = (width: number) => {
   const matrix: number[][] = [];
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < width; i++) {
     const row: number[] = [];
-    for (let j = 0; j < 6; j++) {
+    for (let j = 0; j < width; j++) {
       row.push(randomElement());
     }
     matrix.push(row);
@@ -114,9 +114,6 @@ const getSequences = () => {
     sequences.push(row);
   }
   return sequences;
-  // [[3, 2],
-  // [2, 1, 0],
-  // [0, 0, 3]]
 }
 
 const matrix = ref<number[][]>([]);
@@ -124,7 +121,7 @@ const flatMatrix = computed(() => flattenMatrix(matrix.value));
 const sequences = ref<number[][]>([]);
 const patterns = ref<{ pattern: number[]; matches: FindPatternElement[][] }[]>([]);
 
-export function useMatrix() {
+export function useMatrix(width?: Ref<number>) {
   const updateValue = (row: number, col: number, value: number) => {
     matrix.value[row][col] = value;
   }
@@ -142,14 +139,19 @@ export function useMatrix() {
   watch([sequences, matrix], ([newSequences]) => {
     getPatterns(newSequences);
   });
+  watch([width], () => matrix.value = getMatrix(width?.value ?? 5))
 
   onMounted(() => {
-    matrix.value = getMatrix()
-    sequences.value = getSequences()
+    if (!matrix.value.length) {
+      matrix.value = getMatrix(width?.value ?? 5)
+    }
+    if (!sequences.value.length) {
+      sequences.value = getSequences()
+    }
   });
 
   const resetAll = () => {
-    matrix.value = getMatrix();
+    matrix.value = getMatrix(width?.value ?? 5);
     sequences.value = getSequences();
     patterns.value = [];
   }

@@ -33,15 +33,16 @@ export default defineComponent({
     const chosenPatterns = computed(() => patterns.value.map((pat, index) => {
       return pat.matches[props.chosen[index]]
     }));
+    const width = computed(() => `${matrix.value.length * 60}px`);
 
-    return { matrix, patterns, chosenPatterns };
+    return { matrix, patterns, chosenPatterns, width };
   },
 });
 </script>
 
 <style lang="scss" scoped>
 .matrix-wrapper {
-  width: 360px;
+  width: v-bind('width');
   padding: 0;
 }
 </style>

@@ -15,10 +15,26 @@
     
       <div id="container">
         <div>
-          <ion-button @click="resetAll">
-            <ion-icon slot="start" :icon="refresh"></ion-icon>
-            Reset
-          </ion-button>
+          <div class="matrix-controls">
+              <ion-button @click="resetAll">
+                <ion-icon slot="start" :icon="refresh"></ion-icon>
+                Randomize
+              </ion-button>
+              <div class="width-controls">
+                <ion-button :disabled="width === 5" @click="() => width = Math.max(0, width - 1)">
+                  <ion-icon slot="icon-only" :icon="chevronBack"></ion-icon>
+                </ion-button>
+                <ion-text>
+                  <h3 class="width-size">
+                    <span>{{ width }}</span>
+                  </h3>
+                </ion-text>
+                <ion-button :disabled="width === 7" @click="() => width = Math.min(7, width + 1)">
+                  <ion-icon slot="icon-only" :icon="chevronForward"></ion-icon>
+                </ion-button>
+              </div>
+          </div>
+
           <Matrix :chosen="chosenPatterns"></Matrix>
           <Patterns
             :chosen="chosenPatterns"
@@ -33,7 +49,7 @@
 
 <script lang="ts">
 import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonButton, IonIcon } from '@ionic/vue';
-import { refresh } from 'ionicons/icons';
+import { refresh, chevronForward, chevronBack } from 'ionicons/icons';
 import { defineComponent, ref } from 'vue';
 import Matrix from '@/components/matrix/Matrix.vue';
 import Sequences from '@/components/sequences/Sequences.vue';
@@ -55,22 +71,26 @@ export default defineComponent({
     Patterns,
   },
   setup() {
-    const { resetAll } = useMatrix();
+    const width = ref(5);
+    const { resetAll } = useMatrix(width);
     const chosenPatterns = ref([0, 0, 0]);
     const updateChosen = (newChosen: number[]) => {
       chosenPatterns.value = newChosen;
     }
     return {
+      width,
       resetAll,
       refresh,
       chosenPatterns,
-      updateChosen
+      updateChosen,
+      chevronForward,
+      chevronBack
     }
   }
 });
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 #container {
   text-align: center;
   
@@ -101,5 +121,25 @@ export default defineComponent({
 
 #container a {
   text-decoration: none;
+}
+
+.matrix-controls,
+.width-controls {
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: space-between;
+}
+
+.width-controls {
+  .width-size {
+    margin: 8px 0;
+    padding: 0 8px;
+  }
+
+  .button {
+    --background: transparent;
+    --padding-start: 4px;
+    --padding-end: 4px;
+  }
 }
 </style>
