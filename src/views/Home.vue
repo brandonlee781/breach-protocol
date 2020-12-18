@@ -14,25 +14,58 @@
       </ion-header>
     
       <div id="container">
-        <strong>Ready to create an app?</strong>
-        <p>Start with Ionic <a target="_blank" rel="noopener noreferrer" href="https://ionicframework.com/docs/components">UI Components</a></p>
+        <div>
+          <ion-button @click="resetAll">
+            <ion-icon slot="start" :icon="refresh"></ion-icon>
+            Reset
+          </ion-button>
+          <Matrix :chosen="chosenPatterns"></Matrix>
+          <Patterns
+            :chosen="chosenPatterns"
+            @update:chosen="updateChosen"
+          ></Patterns>
+        </div>
+        <Sequences></Sequences>
       </div>
     </ion-content>
   </ion-page>
 </template>
 
 <script lang="ts">
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar } from '@ionic/vue';
-import { defineComponent } from 'vue';
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonButton, IonIcon } from '@ionic/vue';
+import { refresh } from 'ionicons/icons';
+import { defineComponent, ref } from 'vue';
+import Matrix from '@/components/matrix/Matrix.vue';
+import Sequences from '@/components/sequences/Sequences.vue';
+import { useMatrix } from '@/composables/useMatrix';
+import Patterns from '@/components/pattern/Patterns.vue';
 
 export default defineComponent({
   name: 'Home',
   components: {
+    IonButton,
+    IonIcon,
     IonContent,
     IonHeader,
     IonPage,
     IonTitle,
-    IonToolbar
+    IonToolbar,
+    Matrix,
+    Sequences,
+    Patterns,
+  },
+  setup() {
+    const { resetAll } = useMatrix();
+    const chosenPatterns = ref([0, 0, 0]);
+    const updateChosen = (newChosen: number[]) => {
+      chosenPatterns.value = newChosen;
+    }
+    return {
+      resetAll,
+      refresh,
+      chosenPatterns,
+      updateChosen
+    }
   }
 });
 </script>
@@ -46,6 +79,10 @@ export default defineComponent({
   right: 0;
   top: 50%;
   transform: translateY(-50%);
+
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: center;
 }
 
 #container strong {
