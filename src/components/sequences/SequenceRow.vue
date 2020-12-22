@@ -6,7 +6,7 @@
       :color="color"
       @click="() => increaseValue(index)"
     >
-      {{ matrixValues[seq] }}
+      {{ valueDisplay(sequenceElements, seq) }}
     </ion-button>
     <ion-button v-if="sequence.length < 4" class="add-button" @click="increaseLength">
       <ion-icon slot="icon-only" :icon="add"></ion-icon>
@@ -18,11 +18,12 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType, ref } from 'vue';
+import { defineComponent, PropType, ref, computed } from 'vue';
 import { IonButton, IonIcon } from '@ionic/vue';
 import { add, remove } from 'ionicons/icons';
-
-const matrixValues = ['BD', 'E9', '1C', '55', 'FF', '7A'];
+import { useMatrix } from '@/composables/useMatrix';
+import { valueDisplay } from '@/components/matrix/MatrixElement.vue';
+import { SequenceElement } from '@/composables/solver/SequenceScore';
 
 export default defineComponent({
   name: 'SequenceRow',
@@ -31,15 +32,15 @@ export default defineComponent({
     IonIcon,
   },
   props: {
-    sequence: { type: Array as PropType<number[]>, default: [] },
+    sequence: { type: Array as PropType<SequenceElement[]>, default: [] },
     color: { type: String, default: 'primary' }
   },
   setup(props, { emit }) {
-
+    const { sequenceElements } = useMatrix();
     const increaseLength = () => {
       const newLength = Math.min(4, props.sequence.length + 1);
       if (newLength <= 4 && props.sequence.length < newLength) {
-        emit('update:sequence', [...props.sequence, 0]);
+        emit('update:sequence', [...props.sequence, sequenceElements[0]]);
       }
     }
     const decreaseLength = () => {
@@ -55,11 +56,13 @@ export default defineComponent({
 
     const increaseValue = (index: number) => {
       const val = props.sequence[index]
+      const idx = sequenceElements.findIndex(el => el === val);
       const newSequence = [...props.sequence];
-      if (val + 1 > matrixValues.length - 1) {
-        newSequence[index] = 0;
+
+      if (idx + 1 > sequenceElements.length - 1) {
+        newSequence[index] = sequenceElements[0];
       } else {
-        newSequence[index] = val + 1;
+        newSequence[index] = sequenceElements[idx + 1];
       }
       emit('update:sequence', newSequence);
     }
@@ -67,8 +70,8 @@ export default defineComponent({
     return {
       add,
       remove,
-      matrixValues,
-
+      valueDisplay,
+      sequenceElements,
       increaseLength,
       decreaseLength,
       increaseValue,

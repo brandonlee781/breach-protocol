@@ -16,7 +16,7 @@
       <div id="container">
         <div>
           <div class="matrix-controls">
-              <ion-button @click="resetAll">
+              <ion-button @click="onRandomize">
                 <ion-icon slot="start" :icon="refresh"></ion-icon>
                 Randomize
               </ion-button>
@@ -35,26 +35,42 @@
               </div>
           </div>
 
-          <Matrix :chosen="chosenPatterns"></Matrix>
-          <Patterns
-            :chosen="chosenPatterns"
-            @update:chosen="updateChosen"
-          ></Patterns>
+          <Matrix :chosen="bestPath"></Matrix>
         </div>
-        <Sequences></Sequences>
+        <div>
+          <div class="buffer">
+            <h3>Buffer:</h3>
+            <div class="buffer-controls">
+              <ion-button :disabled="buffer === 4" @click="() => buffer = Math.max(4, buffer - 1)">
+                <ion-icon slot="icon-only" :icon="chevronBack"></ion-icon>
+              </ion-button>
+              <ion-text>
+                <h3 class="buffer-size">
+                  <span>{{ buffer }}</span>
+                </h3>
+              </ion-text>
+              <ion-button :disabled="width === 8" @click="() => buffer = Math.min(8, buffer + 1)">
+                <ion-icon slot="icon-only" :icon="chevronForward"></ion-icon>
+              </ion-button>
+            </div>
+          </div>
+          <Sequences></Sequences>
+          <ion-button :disabled="evaluatingPath" @click="onFindPath">
+            Find Best Path
+          </ion-button>
+        </div>
       </div>
     </ion-content>
   </ion-page>
 </template>
 
 <script lang="ts">
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonButton, IonIcon } from '@ionic/vue';
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonButton, IonIcon, IonText } from '@ionic/vue';
 import { refresh, chevronForward, chevronBack } from 'ionicons/icons';
 import { defineComponent, ref } from 'vue';
 import Matrix from '@/components/matrix/Matrix.vue';
 import Sequences from '@/components/sequences/Sequences.vue';
 import { useMatrix } from '@/composables/useMatrix';
-import Patterns from '@/components/pattern/Patterns.vue';
 
 export default defineComponent({
   name: 'Home',
@@ -66,23 +82,33 @@ export default defineComponent({
     IonPage,
     IonTitle,
     IonToolbar,
+    IonText,
     Matrix,
     Sequences,
-    Patterns,
   },
   setup() {
-    const width = ref(5);
-    const { resetAll } = useMatrix(width);
-    const chosenPatterns = ref([0, 0, 0]);
-    const updateChosen = (newChosen: number[]) => {
-      chosenPatterns.value = newChosen;
+    const bestPath = ref<number[][]>([]);
+    const { buffer, width, resetAll, findPath, evaluatingPath } = useMatrix();
+    
+    const onFindPath = () => {
+      bestPath.value = findPath()
     }
+
+    const onRandomize = () => {
+      bestPath.value = [];
+      resetAll();
+    }
+
     return {
+      buffer,
       width,
-      resetAll,
+      onFindPath,
+      onRandomize,
+      evaluatingPath,
+      bestPath,
+
+      // icons
       refresh,
-      chosenPatterns,
-      updateChosen,
       chevronForward,
       chevronBack
     }
@@ -130,7 +156,8 @@ export default defineComponent({
   justify-content: space-between;
 }
 
-.width-controls {
+.width-controls,
+.buffer-controls {
   .width-size {
     margin: 8px 0;
     padding: 0 8px;
@@ -141,5 +168,22 @@ export default defineComponent({
     --padding-start: 4px;
     --padding-end: 4px;
   }
+}
+
+.buffer,
+.buffer-controls {
+  display: flex;
+  flex-flow: row nowrap;
+
+  ion-button::part(native) {
+    margin-top: 6px;
+  }
+}
+.buffer {
+  justify-content: center;
+}
+
+.buffer-size {
+  max-height: 36px;
 }
 </style>

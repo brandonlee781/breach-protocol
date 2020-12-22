@@ -19,6 +19,7 @@ import { IonGrid, IonText } from '@ionic/vue';
 
 import { useMatrix } from '@/composables/useMatrix';
 import SequenceRow from './SequenceRow.vue';
+import { SequenceElement } from '@/composables/solver/SequenceScore';
 
 const colors = ['primary', 'warning', 'tertiary'];
 
@@ -32,7 +33,7 @@ export default defineComponent({
   setup(/*props, ctx*/) {
     const { sequences } = useMatrix();
 
-    const updateSequence = (val: number[], index: number) => {
+    const updateSequence = (val: SequenceElement[], index: number) => {
       const newSequences = [...sequences.value];
       newSequences[index] = val;
       sequences.value = newSequences;

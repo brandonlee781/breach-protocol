@@ -26,6 +26,43 @@ import './theme/variables.css';
 const app = createApp(App)
   .use(IonicVue)
   .use(router);
+
+app.directive('longpress', {
+  mounted(el, binding) {
+    let pressTimer: number | null = null;
+
+    const handler = (e: any) => {
+      binding.value(e);
+    };
+
+    const start = (e: any) => {
+      if (e.type === 'click' && e.buton !== 0) {
+        return;
+      }
+
+      if (pressTimer === null) {
+        pressTimer = setTimeout(() => {
+          handler(e);
+        }, 1000)
+      }
+    };
+    const cancel = () => {
+      if (pressTimer !== null) {
+        clearTimeout(pressTimer);
+        pressTimer = null;
+      }
+    };
+
+    // Add Event listeners
+    el.addEventListener("mousedown", start);
+    el.addEventListener("touchstart", start);
+    // Cancel timeouts if this events happen
+    el.addEventListener("click", cancel);
+    el.addEventListener("mouseout", cancel);
+    el.addEventListener("touchend", cancel);
+    el.addEventListener("touchcancel", cancel);
+  }
+})
   
 router.isReady().then(() => {
   app.mount('#app');

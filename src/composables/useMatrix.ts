@@ -1,103 +1,20 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
-import { computed, onMounted, Ref, ref, watch } from 'vue';
+import { onMounted, ref} from 'vue';
+import { generatePaths, Matrix, Sequence } from './solver/generatePaths';
+import { Path } from './solver/Path';
+import { PathScore } from './solver/PathScore';
+import { SequenceElement } from './solver/SequenceScore';
 
-interface PatternElement {
-  row: number;
-  col: number;
+const sequenceElements: SequenceElement[] = [0xbd, 0xe9, 0x1c, 0x55, 0xff, 0x77];
+const getSequenceElement = (num: number): SequenceElement => {
+  return sequenceElements[num];
 }
-
-export interface FindPatternElement extends PatternElement {
-  val: number;
-  dir?: Directions;
-}
-
-enum Directions {
-  X,
-  Y
-}
-
-const flattenMatrix = (pMatrix: number[][]): FindPatternElement[] => {
-  const rMatrix = [];
-  for (let row = 0; row < pMatrix.length; row++) {
-    for (let col = 0; col < pMatrix[row].length; col++) {
-      const val = pMatrix[row][col];
-      rMatrix.push({
-        row,
-        col,
-        val,
-      });
-    }
-  }
-  return rMatrix;
-}
-
-// Find all possible next matching elements in the pattern
-const findNextElements = (curr: number, prev: FindPatternElement | undefined) => {
-  if (!prev) return flatMatrix.value.filter(m => m.val === curr);
-  if (prev.dir === Directions.X) {
-    return flatMatrix.value.filter(m => m.val === curr && m.col === prev.col);
-  } 
-  if (prev.dir === Directions.Y) {
-    return flatMatrix.value.filter(m => m.val === curr && m.row === prev.row);
-  }
-  return flatMatrix.value.filter(m =>
-    m.val === curr &&
-    (m.row === prev.row || m.col === prev.col)
-  );
-}
-const filterOutRepeats = (found: FindPatternElement[]) => (n: FindPatternElement): boolean => {
-  let valid = true;
-  if (found.length) {
-    found.forEach(f => {
-      if (f.row === n.row && f.col === n.col) {
-        valid = false;
-      }
-    })
-  }
-  return valid;
-};
-
-export const findPatterns = (
-  pattern: number[],
-  found: FindPatternElement[] = [],
-  allFound: FindPatternElement[][] = []
-): FindPatternElement[][] => {
-  const searchElement: number = pattern[found.length];
-  const previousMatch: FindPatternElement | null = found[found.length - 1];
-  const previousDirection = previousMatch?.dir;
-
-  const matchingEls = findNextElements(searchElement, previousMatch)
-    .filter(filterOutRepeats(found))
-    .map(el => {
-      const curr = {
-        ...el,
-        dir: previousDirection === Directions.X ? Directions.Y : Directions.X,
-      }
-      if (!previousMatch && curr.row === 0) {
-        curr.dir = Directions.X
-      } else if (!previousMatch && curr.row !== 0) {
-        curr.dir = Directions.Y
-      }
-
-      return curr
-    })
-
-  if (pattern.length === found.length) {
-    allFound.push(found);
-  } else if (matchingEls.length) {
-    for (const el of matchingEls) {
-      findPatterns(pattern, found.concat(el), allFound);
-    }
-  }
-  return allFound;
-}
-
-const randomElement = () => Math.floor(Math.random() * 6)
+const randomElement = () => getSequenceElement(Math.floor(Math.random() * 6))
 
 const getMatrix = (width: number) => {
-  const matrix: number[][] = [];
+  const matrix: SequenceElement[][] = [];
   for (let i = 0; i < width; i++) {
-    const row: number[] = [];
+    const row: SequenceElement[] = [];
     for (let j = 0; j < width; j++) {
       row.push(randomElement());
     }
@@ -107,7 +24,7 @@ const getMatrix = (width: number) => {
 };
 const getSequences = () => {
   const sequences = [];
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < 4; i++) {
     const randLength = Math.floor(Math.random() * (4 - 2 + 1)) + 2;
     const row = Array.from({ length: randLength }, () => randomElement());
     
@@ -116,30 +33,16 @@ const getSequences = () => {
   return sequences;
 }
 
-const matrix = ref<number[][]>([]);
-const flatMatrix = computed(() => flattenMatrix(matrix.value));
-const sequences = ref<number[][]>([]);
-const patterns = ref<{ pattern: number[]; matches: FindPatternElement[][] }[]>([]);
+const matrix = ref<Matrix>([]);
+const sequences = ref<Sequence[]>([]);
 
-export function useMatrix(width?: Ref<number>) {
-  const updateValue = (row: number, col: number, value: number) => {
+export function useMatrix() {
+  const evaluatingPath = ref(false);
+  const width = ref(5);
+  const buffer = ref(7);
+  const updateValue = (row: number, col: number, value: SequenceElement) => {
     matrix.value[row][col] = value;
   }
-
-  const getPatterns = (pat: number[][]) => {
-    patterns.value = pat.map(pattern => {
-      const matches = findPatterns(pattern, [], []).filter(p => p.length);
-      return {
-        pattern,
-        matches,
-      };
-    })
-  }
-
-  watch([sequences, matrix], ([newSequences]) => {
-    getPatterns(newSequences);
-  });
-  watch([width], () => matrix.value = getMatrix(width?.value ?? 5))
 
   onMounted(() => {
     if (!matrix.value.length) {
@@ -153,14 +56,26 @@ export function useMatrix(width?: Ref<number>) {
   const resetAll = () => {
     matrix.value = getMatrix(width?.value ?? 5);
     sequences.value = getSequences();
-    patterns.value = [];
+  }
+
+  const findPath = () => {
+    evaluatingPath.value = true;
+    const paths = generatePaths(buffer.value, matrix.value, sequences.value);
+    const pathsAndScores: [Path, number][] = paths.map(path => [path, new PathScore(path, sequences.value, buffer.value).compute(matrix.value)])
+    const [[bestPath]] = pathsAndScores.sort(([aPath, aScore], [bPath, bScore]) => bScore - aScore);
+    evaluatingPath.value = false;
+    return bestPath.coords;
   }
 
   return {
+    buffer,
+    width,
     matrix,
     sequences,
-    patterns,
+    sequenceElements,
     updateValue,
     resetAll,
+    findPath,
+    evaluatingPath,
   }
 }
