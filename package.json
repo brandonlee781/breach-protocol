@@ -8,6 +8,7 @@
     "test:unit": "vue-cli-service test:unit",
     "test:e2e": "vue-cli-service test:e2e",
     "test:debug": "node --inspect-brk node_modules/.bin/vue-cli-service test:unit --no-cache --watch --runInBand",
+    "deploy": "npm run build && firebase deploy",
     "lint": "vue-cli-service lint"
   },
   "dependencies": {

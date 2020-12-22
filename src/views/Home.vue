@@ -14,7 +14,7 @@
       </ion-header>
     
       <div id="container">
-        <div>
+        <div class="matrix-wrapper">
           <div class="matrix-controls">
               <ion-button @click="onRandomize">
                 <ion-icon slot="start" :icon="refresh"></ion-icon>
@@ -37,7 +37,7 @@
 
           <Matrix :chosen="bestPath"></Matrix>
         </div>
-        <div>
+        <div class="sequence-wrapper">
           <div class="buffer">
             <h3>Buffer:</h3>
             <div class="buffer-controls">
@@ -119,16 +119,20 @@ export default defineComponent({
 <style lang="scss" scoped>
 #container {
   text-align: center;
-  
+/*   
   position: absolute;
   left: 0;
   right: 0;
   top: 50%;
-  transform: translateY(-50%);
+  transform: translateY(-50%); */
 
   display: flex;
-  flex-flow: row nowrap;
+  flex-flow: column nowrap;
   justify-content: center;
+
+  @media(min-width: 600px) {
+    flex-flow: row nowrap;
+  }
 }
 
 #container strong {
@@ -147,6 +151,17 @@ export default defineComponent({
 
 #container a {
   text-decoration: none;
+}
+
+.matrix-wrapper,
+.sequence-wrapper {
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: center;
+}
+
+.matrix-controls {
+  width: 300px;
 }
 
 .matrix-controls,

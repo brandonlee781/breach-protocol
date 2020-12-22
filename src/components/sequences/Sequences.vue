@@ -47,7 +47,9 @@ export default defineComponent({
 <style lang="scss" scoped>
 .sequence-wrapper {
   max-width: 300px;
-  margin: 0 1rem;
+  @media(min-width: 600px) {
+    margin: 0 1rem;
+  }
 }
 </style>
 
