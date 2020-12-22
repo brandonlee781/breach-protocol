@@ -76,12 +76,16 @@ export function useMatrix() {
   }
 
   const findPath = () => {
+    let coords: number[][] = [];
     evaluatingPath.value = true;
     const paths = generatePaths(buffer.value, matrix.value, sequences.value);
     const pathsAndScores: [Path, number][] = paths.map(path => [path, new PathScore(path, sequences.value, buffer.value).compute(matrix.value)])
-    const [[bestPath]] = pathsAndScores.sort(([aPath, aScore], [bPath, bScore]) => bScore - aScore);
+    if (pathsAndScores.length) {
+      const [[bestPath]] = pathsAndScores.sort(([aPath, aScore], [bPath, bScore]) => bScore - aScore);
+      coords = bestPath.coords;
+    }
     evaluatingPath.value = false;
-    return bestPath.coords;
+    return coords;
   }
 
   return {
