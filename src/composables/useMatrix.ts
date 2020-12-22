@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
-import { onMounted, ref} from 'vue';
+import { onMounted, ref, watch} from 'vue';
 import { generatePaths, Matrix, Sequence } from './solver/generatePaths';
 import { Path } from './solver/Path';
 import { PathScore } from './solver/PathScore';
@@ -50,6 +50,23 @@ export function useMatrix() {
     }
     if (!sequences.value.length) {
       sequences.value = getSequences()
+    }
+  });
+
+  watch(width, (newWidth, oldWidth) => {
+    const diff = newWidth - oldWidth;
+    if (diff > 0) {
+      const newVals = Array(diff).fill(0xbd);
+      const newRow = Array(newWidth).fill(0xbd);
+      matrix.value = matrix.value.map(row => row.concat(newVals));
+      for (let i = 0; i < diff; i++) {
+        matrix.value.push([...newRow]);
+      }
+    } else {
+      matrix.value.length = newWidth;
+      matrix.value.forEach((row, idx) => {
+        matrix.value[idx].length = newWidth;
+      })
     }
   });
 
